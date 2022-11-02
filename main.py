@@ -2,6 +2,7 @@
 
 from argparse import ArgumentParser
 from functools import reduce
+import re
 
 class MapFile:
     def __init__(self, filepath):
@@ -56,7 +57,28 @@ class MapFile:
                 return False
 
         return True
+    
+    def print_has_deadlock(self):
+        for i in self.resources_by_process:
+            missing_resources = []
+            
+            for j in range(self.resources_qty):
+                all_resources = self.available_resources[j] + self.allocated_resources[i["id"]][j]
 
+                if all_resources < self.request_resources[i["id"]][j]:
+                    missing_resources.append({
+                        "id": j + 1,
+                        "missing":  self.request_resources[i["id"]][j] - all_resources
+                    })
+
+            if missing_resources:
+                program_exit = "O processo {0} está em deadlock".format(i["id"] + 1)
+                
+                for i in missing_resources:
+                    program_exit += ", faltam {0} instâncias de R{1}".format(i["missing"], i["id"])
+                
+                print(program_exit)
+                
     def has_deadlock(self):
         self.calc_resources_by_process()
 
@@ -73,13 +95,15 @@ class MapFile:
                     break
 
             if not processed:
+                self.print_has_deadlock()
                 return True
-
+            
+        print("Todos os processos foram finalizados.")
         return False
 
 def main(filepath):
     file = MapFile(filepath)
-    print(file.has_deadlock())
+    file.has_deadlock()
 
 if __name__ == "__main__":
     parser = ArgumentParser()
