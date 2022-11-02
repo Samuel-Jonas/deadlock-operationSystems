@@ -48,23 +48,40 @@ class MapFile:
 
         self.resources_by_process = sorted(self.resources_by_process, key=lambda r: r["total"], reverse=True)
 
+    def can_process_be_processed(self, process_id):
+        for i in range(self.resources_qty):
+            all_resources = self.available_resources[i] + self.allocated_resources[process_id][i]
+
+            if all_resources < self.request_resources[process_id][i]:
+                return False
+
+        return True
+
+    def has_deadlock(self):
+        self.calc_resources_by_process()
+
+        while self.resources_by_process:
+            processed = False
+
+            for i in self.resources_by_process:
+                if self.can_process_be_processed(i["id"]):
+                    for j in range(self.resources_qty):
+                        self.available_resources[j] += self.allocated_resources[i["id"]][j]
+                    
+                    self.resources_by_process.remove(i)
+                    processed = True
+                    break
+
+            if not processed:
+                return True
+
+        return False
+
 def main(filepath):
     file = MapFile(filepath)
-    file.calc_resources_by_process()
-
-    print(file.__dict__)
-
-def can_process_be_processed(file, process_id):
-    for i in range(file.resources_qty):
-        all_resources = file.available_resources[i] + file.allocated_resources[process_id][i]
-
-        if all_resources < file.request_resources[process_id][i]:
-            return False
-
-    return True
+    print(file.has_deadlock())
 
 if __name__ == "__main__":
-
     parser = ArgumentParser()
 
     parser.add_argument("filepath")
