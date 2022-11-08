@@ -89,7 +89,8 @@ class MapFile:
                 if self.can_process_be_processed(i["id"]):
                     for j in range(self.resources_qty):
                         self.available_resources[j] += self.allocated_resources[i["id"]][j]
-                    
+                        
+                    print(self.resources_by_process)
                     self.resources_by_process.remove(i)
                     processed = True
                     break
